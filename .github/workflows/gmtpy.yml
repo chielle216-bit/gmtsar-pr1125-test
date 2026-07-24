@@ -93,7 +93,7 @@ jobs:
 
           echo "RS2_SLC_Hawaii sweep completed"
 
-      - name: Upload installation and sweep logs
+      - name: Upload installation and sweep results
         if: always()
         uses: actions/upload-artifact@v7
         with:
@@ -106,5 +106,9 @@ jobs:
             gmtsar-pr1125/gmtsar/python/work/sweep_summary.md
             gmtsar-pr1125/gmtsar/python/work/timeSpentLog.txt
             gmtsar-pr1125/gmtsar/python/work/results/
+
             gmtsar-pr1125/gmtsar/python/work/csh_test/RS2_SLC_Hawaii/log.txt
             gmtsar-pr1125/gmtsar/python/work/python_test/RS2_SLC_Hawaii/log.txt
+
+            gmtsar-pr1125/gmtsar/python/work/csh_test/RS2_SLC_Hawaii/**/*.png
+            gmtsar-pr1125/gmtsar/python/work/python_test/RS2_SLC_Hawaii/**/*.png
