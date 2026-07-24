@@ -1,0 +1,110 @@
+name: GMTSAR PR1125 Linux Conda RS2
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  linux-conda-rs2:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+
+    steps:
+      - name: Checkout PR 1125 commit
+        uses: actions/checkout@v6
+        with:
+          repository: gmtsar/gmtsar
+          ref: aa0aa0f1b2b85d130aa8f068a4a6d5c1686f7e9f
+          path: gmtsar-pr1125
+          persist-credentials: false
+
+      - name: Verify clean Linux runner
+        working-directory: gmtsar-pr1125
+        shell: bash
+        run: |
+          set -eo pipefail
+
+          echo "Operating system:"
+          cat /etc/os-release
+
+          echo "Architecture:"
+          uname -m
+
+          echo "Checked-out commit:"
+          git rev-parse HEAD
+
+          test "$(git rev-parse HEAD)" = \
+            "aa0aa0f1b2b85d130aa8f068a4a6d5c1686f7e9f"
+
+          if command -v p2p_processing >/dev/null 2>&1; then
+            echo "ERROR: GMTSAR already exists on the runner"
+            command -v p2p_processing
+            exit 1
+          fi
+
+          if [ -n "${GMTSAR:-}" ]; then
+            echo "ERROR: GMTSAR environment variable already exists"
+            echo "GMTSAR=$GMTSAR"
+            exit 1
+          fi
+
+          echo "Clean Linux runner confirmed"
+
+      - name: Install bare Miniconda
+        uses: conda-incubator/setup-miniconda@v4
+        with:
+          miniconda-version: latest
+          auto-update-conda: false
+          auto-activate: true
+          activate-environment: ""
+
+      - name: Show initial Conda state
+        shell: bash -el {0}
+        run: |
+          conda --version
+          conda env list
+
+      - name: Install GMTSAR from README
+        working-directory: gmtsar-pr1125
+        shell: bash -el {0}
+        run: |
+          set -eo pipefail
+
+          python3 gmtsar/python/install.py \
+            --system conda-linux-full
+
+      - name: Run RS2 Hawaii sweep
+        working-directory: gmtsar-pr1125
+        shell: bash -el {0}
+        run: |
+          conda activate gmtsar
+          set -eo pipefail
+
+          export GMTSAR="$PWD"
+          export PATH="$GMTSAR/bin:$PATH"
+
+          echo "Starting RS2_SLC_Hawaii sweep"
+
+          python3 gmtsar/python/tests/sweep.py \
+            --fast \
+            --cases RS2_SLC_Hawaii
+
+          echo "RS2_SLC_Hawaii sweep completed"
+
+      - name: Upload installation and sweep logs
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: gmtsar-pr1125-linux-rs2-results
+          if-no-files-found: warn
+          retention-days: 14
+          path: |
+            gmtsar-pr1125/gmtsar/python/install_logs/
+            gmtsar-pr1125/gmtsar/python/work/sweep.log
+            gmtsar-pr1125/gmtsar/python/work/sweep_summary.md
+            gmtsar-pr1125/gmtsar/python/work/timeSpentLog.txt
+            gmtsar-pr1125/gmtsar/python/work/results/
+            gmtsar-pr1125/gmtsar/python/work/csh_test/RS2_SLC_Hawaii/log.txt
+            gmtsar-pr1125/gmtsar/python/work/python_test/RS2_SLC_Hawaii/log.txt
