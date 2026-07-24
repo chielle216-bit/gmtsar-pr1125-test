@@ -1,0 +1,35 @@
+name: Download RS2 Dataset
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  download-rs2:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+
+    steps:
+      - name: Download RS2 dataset
+        shell: bash
+        run: |
+          set -eo pipefail
+
+          curl -fL \
+            --retry 3 \
+            --connect-timeout 60 \
+            http://topex.ucsd.edu/gmtsar/tar/RS2_SLC_Hawaii.tar.gz \
+            -o RS2_SLC_Hawaii.tar.gz
+
+          gzip -t RS2_SLC_Hawaii.tar.gz
+          ls -lh RS2_SLC_Hawaii.tar.gz
+
+      - name: Upload RS2 dataset
+        uses: actions/upload-artifact@v7
+        with:
+          name: RS2_SLC_Hawaii-dataset
+          path: RS2_SLC_Hawaii.tar.gz
+          compression-level: 0
+          retention-days: 7
