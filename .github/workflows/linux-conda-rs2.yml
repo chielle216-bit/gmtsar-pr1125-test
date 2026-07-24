@@ -70,8 +70,9 @@ jobs:
         working-directory: gmtsar-pr1125
         shell: bash -el {0}
         run: |
-          set -euxo pipefail
           conda activate gmtsar
+          set -exo pipefail
+
           export GMTSAR="$PWD"
           export PATH="$GMTSAR/bin:$PATH"
 
@@ -88,8 +89,9 @@ jobs:
         working-directory: gmtsar-pr1125
         shell: bash -el {0}
         run: |
-          set -euxo pipefail
           conda activate gmtsar
+          set -exo pipefail
+
           export GMTSAR="$PWD"
           export PATH="$GMTSAR/bin:$PATH"
 
